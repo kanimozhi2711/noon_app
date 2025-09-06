@@ -69,25 +69,23 @@ const upload= multer({storage, limits: { fileSize: 100 * 1024 * 1024 } });
 app.post("/products",upload.single("image"),(req,res)=>{
     const {name, description, price, image_url}=req.body;
     let imageurl;
-    if(image_url)
-    {
-        const imagepath=`uploads/${Date.now()}.png`;
-        fs.writeFileSync(imagepath,Buffer.from(image_url,"base64"));
-        imageurl=`http://localhost:5000/${imagepath}`
-    }else if(req.file){
-         imageurl=`http://localhost:5000/uploads/${req.file.filename}`;
+     if (image_url) {
+        const fileName = `${Date.now()}.png`;
+        const filePath = path.join(__dirname, "uploads", fileName);
+        fs.writeFileSync(filePath, Buffer.from(image_url, "base64"));
+        imageurl = `http://localhost:5000/uploads/${fileName}`;
+    }  else if (req.file) {
+        imageurl = `http://localhost:5000/uploads/${req.file.filename}`;
     }
+
    
-    const sql="INSERT INTO PRODUCTS(name, description, price, imageurl) values (?,?,?,?)"
-    db.query(
-        sql,    
-        [name,description,price,imageurl],
-        (err,result)=>{
-            if(err){
-                res.status(500).json({error:err.message});
-            }else{
-                res.json({message:"Product added",id: result.id});
-            }
+    const sql = "INSERT INTO PRODUCTS(name, description, price, imageurl) VALUES (?, ?, ?, ?)";
+    db.query(sql, [name, description, price, imageurl], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json({ message: "Product added", id: result.insertId, imageurl });
+        }
         }
 
         );
